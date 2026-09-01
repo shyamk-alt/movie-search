@@ -5,11 +5,114 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>MovieFlix • by shyamk-alt</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{font-family:'Inter',sans-serif}
 .logo{font-family:'Space Grotesk',sans-serif}
-.glass{backdrop-filter:blur(20px); background:rgba(24,24,27,0.8)}
+.glass{backdrop-filter:blur(20px);background:rgba(24,24,27,0.8)}
 .card{transition:all .4s cubic-bezier(.175,.885,.32,1.275)}
-.card:hover{transform:translateY(-8px) scale(1.02); box-shadow:0 20px 40px rgba(229,9,20,.25)}
-.shimmer{background:linear-gradient(90deg,#27272a 25
+.card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 20px 40px rgba(229,9,20,.25)}
+</style>
+</head>
+<body class="bg-[#09090b] text-white min-h-screen">
+<header class="sticky top-0 z-50 glass border-b border-zinc-800">
+<div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+<h1 class="logo text-2xl font-bold"><span class="text-red-600">Movie</span>Flix</h1>
+<div class="flex gap-2">
+<button id="favBtn" class="px-4 py-2 bg-zinc-800 rounded-full text-sm">❤️ Favorites (<span id="favCount">0</span>)</button>
+</div>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+<div class="text-center mb-8">
+<h2 class="text-4xl md:text-5xl font-extrabold mb-4">Find your next <span class="text-red-600">binge</span></h2>
+<div class="max-w-xl mx-auto flex gap-2">
+<input id="searchInput" class="flex-1 px-5 py-3 bg-zinc-900 border border-zinc-800 rounded-full outline-none focus:border-red-600" placeholder="Search Avengers, Batman, Inception..."/>
+<button id="searchBtn" class="px-6 py-3 bg-red-600 rounded-full font-semibold hover:bg-red-700">Search</button>
+</div>
+<p class="text-zinc-500 text-xs mt-3">Powered by OMDb API • Netflix-style UI</p>
+</div>
+
+<div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+<div id="msg" class="text-center text-zinc-500 mt-20">🔍 Search a movie to start</div>
+</main>
+
+<div id="modal" class="fixed inset-0 bg-black/80 hidden z-50 p-4 flex items-center justify-center">
+<div class="bg-zinc-900 rounded-2xl max-w-2xl w-full p-6 relative">
+<button onclick="closeModal()" class="absolute top-3 right-4 text-2xl">×</button>
+<div id="modalContent"></div>
+</div>
+</div>
+
+<script>
+const API_KEY = 'thewdb'; // Free demo key - replace with your own from omdbapi.com if needed
+let favorites = JSON.parse(localStorage.getItem('mf_fav')||'[]');
+
+const grid = document.getElementById('grid');
+const msg = document.getElementById('msg');
+const input = document.getElementById('searchInput');
+const favCount = document.getElementById('favCount');
+
+function updateFavCount(){ favCount.textContent = favorites.length; localStorage.setItem('mf_fav', JSON.stringify(favorites)); }
+updateFavCount();
+
+async function searchMovies(q, showFav=false){
+  if(showFav){
+    if(!favorites.length){msg.textContent='No favorites yet ❤️'; grid.innerHTML=''; msg.classList.remove('hidden'); return;}
+    msg.classList.add('hidden');
+    grid.innerHTML = favorites.map(m=>cardHTML(m,true)).join('');
+    return;
+  }
+  if(!q) return;
+  msg.textContent='Searching...'; msg.classList.remove('hidden'); grid.innerHTML='';
+  try{
+    const res = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(q)}&apikey=${API_KEY}`);
+    const data = await res.json();
+    if(data.Response==='False'){msg.textContent='No results: '+data.Error; return;}
+    msg.classList.add('hidden');
+    grid.innerHTML = data.Search.map(m=>cardHTML(m)).join('');
+  }catch(e){msg.textContent='Error: '+e.message;}
+}
+
+function cardHTML(m, isFavObj=false){
+  const id = isFavObj ? m.imdbID : m.imdbID;
+  const title = m.Title; const year = m.Year;
+  const poster = m.Poster!=='N/A' ? m.Poster : 'https://via.placeholder.com/300x450?text=No+Image';
+  const isFav = favorites.some(f=>f.imdbID===id);
+  return `<div class="card bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 cursor-pointer" onclick="openModal('${id}')">
+  <img src="${poster}" class="w-full h-72 object-cover"/>
+  <div class="p-3"><h3 class="font-semibold truncate">${title}</h3><p class="text-xs text-zinc-500">${year}</p>
+  <button onclick="event.stopPropagation();toggleFav('${id}','${title.replace(/'/g,"\\'")}','${year}','${poster}')" class="mt-2 text-xs px-3 py-1 rounded-full ${isFav?'bg-red-600':'bg-zinc-800'}">${isFav?'❤️ Saved':'🤍 Save'}</button>
+  </div></div>`;
+}
+
+function toggleFav(id,title,year,poster){
+  const idx = favorites.findIndex(f=>f.imdbID===id);
+  if(idx>-1) favorites.splice(idx,1); else favorites.push({imdbID:id,Title:title,Year:year,Poster:poster});
+  updateFavCount(); searchMovies(input.value.trim(), document.body.dataset.mode==='fav');
+  if(document.body.dataset.mode!=='fav'){searchMovies(input.value.trim());}
+}
+
+async function openModal(id){
+  const res = await fetch(`https://www.omdbapi.com/?i=${id}&plot=full&apikey=${API_KEY}`);
+  const d = await res.json();
+  document.getElementById('modalContent').innerHTML = `
+  <div class="flex gap-4"><img src="${d.Poster!=='N/A'?d.Poster:'https://via.placeholder.com/300x450'}" class="w-32 rounded-xl"/>
+  <div><h2 class="text-xl font-bold">${d.Title}</h2><p class="text-sm text-zinc-400">${d.Year} • ${d.Runtime} • ${d.imdbRating}⭐</p><p class="text-sm mt-2 text-zinc-300">${d.Plot}</p><p class="text-xs mt-2 text-zinc-500">${d.Genre}</p></div></div>`;
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modal').classList.add('hidden');}
+
+document.getElementById('searchBtn').onclick=()=>searchMovies(input.value.trim());
+input.onkeydown=e=>{if(e.key==='Enter')searchMovies(input.value.trim())};
+document.getElementById('favBtn').onclick=()=>{
+  const isFavMode = document.body.dataset.mode==='fav';
+  document.body.dataset.mode = isFavMode?'search':'fav';
+  document.getElementById('favBtn').textContent = isFavMode ? `❤️ Favorites (${favorites.length})` : '🔍 Search';
+  if(isFavMode) searchMovies(input.value.trim()); else searchMovies('', true);
+};
+searchMovies('Avengers');
+</script>
+</body>
+</html>
