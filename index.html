@@ -1,118 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MovieFlix • by shyamk-alt</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MovieFlix v2 – Watch Trailers</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-<style>
-*{font-family:'Inter',sans-serif}
-.logo{font-family:'Space Grotesk',sans-serif}
-.glass{backdrop-filter:blur(20px);background:rgba(24,24,27,0.8)}
-.card{transition:all .4s cubic-bezier(.175,.885,.32,1.275)}
-.card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 20px 40px rgba(229,9,20,.25)}
-</style>
-</head>
-<body class="bg-[#09090b] text-white min-h-screen">
-<header class="sticky top-0 z-50 glass border-b border-zinc-800">
-<div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-<h1 class="logo text-2xl font-bold"><span class="text-red-600">Movie</span>Flix</h1>
-<div class="flex gap-2">
-<button id="favBtn" class="px-4 py-2 bg-zinc-800 rounded-full text-sm">❤️ Favorites (<span id="favCount">0</span>)</button>
-</div>
-</div>
-</header>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
+<style>*{font-family:'Plus Jakarta Sans',sans-serif}.glass{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08)}</style></head>
+<body class="bg-[#07070a] text-white min-h-screen"><div class="max-w-6xl mx-auto px-4 py-4">
+<div class="flex justify-between items-center"><div class="flex items-center gap-2"><span class="text-2xl font-extrabold"><span class="text-red-600">Movie</span>Flix</span><span class="text-[9px] bg-red-600 px-2 py-0.5 rounded-full">v2 WATCH</span></div><button onclick="showFav()" class="bg-white/10 px-4 py-2 rounded-full text-xs">❤️ Favorites (<span id="favCount">0</span>)</button></div>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
-<div class="text-center mb-8">
-<h2 class="text-4xl md:text-5xl font-extrabold mb-4">Find your next <span class="text-red-600">binge</span></h2>
-<div class="max-w-xl mx-auto flex gap-2">
-<input id="searchInput" class="flex-1 px-5 py-3 bg-zinc-900 border border-zinc-800 rounded-full outline-none focus:border-red-600" placeholder="Search Avengers, Batman, Inception..."/>
-<button id="searchBtn" class="px-6 py-3 bg-red-600 rounded-full font-semibold hover:bg-red-700">Search</button>
-</div>
-<p class="text-zinc-500 text-xs mt-3">Powered by OMDb API • Netflix-style UI</p>
-</div>
+<div class="mt-8 text-center"><div class="text-4xl font-extrabold">Find your next <span class="text-red-600">binge</span></div><div class="mt-4 flex gap-2 max-w-xl mx-auto"><input id="q" placeholder="Search Avengers, Batman, Inception..." class="flex-1 bg-[#1a1a1d] rounded-full px-5 py-3.5 text-sm outline-none border border-white/10" onkeydown="if(event.key==='Enter')search()"><button onclick="search()" class="bg-red-600 px-8 py-3.5 rounded-full font-bold text-sm">Search</button></div><div class="text-[11px] opacity-40 mt-3">Now with trailers • Click any movie to watch trailer + where to watch</div></div>
 
-<div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
-<div id="msg" class="text-center text-zinc-500 mt-20">🔍 Search a movie to start</div>
-</main>
+<div id="grid" class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8"></div>
 
-<div id="modal" class="fixed inset-0 bg-black/80 hidden z-50 p-4 flex items-center justify-center">
-<div class="bg-zinc-900 rounded-2xl max-w-2xl w-full p-6 relative">
-<button onclick="closeModal()" class="absolute top-3 right-4 text-2xl">×</button>
-<div id="modalContent"></div>
-</div>
-</div>
+<!-- MODAL -->
+<div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-50 p-3 flex items-center justify-center"><div class="bg-[#121214] rounded-[20px] max-w-3xl w-full overflow-hidden border border-white/10 max-h-[90vh] overflow-auto"><div class="relative"><div id="trailerBox" class="aspect-video bg-black flex items-center justify-center"><span class="text-xs opacity-50">Loading trailer...</span></div><button onclick="closeModal()" class="absolute top-3 right-3 w-8 h-8 bg-black/70 rounded-full">✕</button></div><div class="p-5"><div id="mTitle" class="font-bold text-xl"></div><div id="mMeta" class="text-xs opacity-60 mt-1"></div><div id="mPlot" class="text-sm opacity-80 mt-3 leading-6"></div><div class="mt-4 flex flex-wrap gap-2"><a id="netflix" target="_blank" class="bg-red-600 px-4 py-2 rounded-full text-xs font-bold">Watch on Netflix</a><a id="prime" target="_blank" class="bg-[#00a8e1] px-4 py-2 rounded-full text-xs font-bold">Prime Video</a><a id="yt" target="_blank" class="bg-white text-black px-4 py-2 rounded-full text-xs font-bold">YouTube Trailer</a></div><div class="mt-3 text-[10px] opacity-40">Note: Full movies stream on OTT platforms. We show trailer + where to watch legally (like IMDb). To add full streaming you need license.</div></div></div></div>
 
+</div>
 <script>
-const API_KEY = 'aeb84c44'; // Free demo key - replace with your own from omdbapi.com if needed
-let favorites = JSON.parse(localStorage.getItem('mf_fav')||'[]');
-
-const grid = document.getElementById('grid');
-const msg = document.getElementById('msg');
-const input = document.getElementById('searchInput');
-const favCount = document.getElementById('favCount');
-
-function updateFavCount(){ favCount.textContent = favorites.length; localStorage.setItem('mf_fav', JSON.stringify(favorites)); }
-updateFavCount();
-
-async function searchMovies(q, showFav=false){
-  if(showFav){
-    if(!favorites.length){msg.textContent='No favorites yet ❤️'; grid.innerHTML=''; msg.classList.remove('hidden'); return;}
-    msg.classList.add('hidden');
-    grid.innerHTML = favorites.map(m=>cardHTML(m,true)).join('');
-    return;
-  }
-  if(!q) return;
-  msg.textContent='Searching...'; msg.classList.remove('hidden'); grid.innerHTML='';
-  try{
-    const res = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(q)}&apikey=${API_KEY}`);
-    const data = await res.json();
-    if(data.Response==='False'){msg.textContent='No results: '+data.Error; return;}
-    msg.classList.add('hidden');
-    grid.innerHTML = data.Search.map(m=>cardHTML(m)).join('');
-  }catch(e){msg.textContent='Error: '+e.message;}
+let APIKEY='b3c7f4eb'; let favs=JSON.parse(localStorage.getItem('fav')||'[]');
+function updateFav(){document.getElementById('favCount').innerText=favs.length;localStorage.setItem('fav',JSON.stringify(favs));}
+async function search(){let q=document.getElementById('q').value||'Avengers';let r=await fetch(`https://www.omdbapi.com/?apikey=${APIKEY}&s=${q}`);let d=await r.json();if(!d.Search){document.getElementById('grid').innerHTML='<div class="col-span-4 text-center opacity-50 text-sm">No movies found</div>';return;}render(d.Search);}
+function render(list){document.getElementById('grid').innerHTML=list.map(m=>`<div onclick="openMovie('${m.imdbID}')" class="glass rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.02] transition"><img src="${m.Poster!=='N/A'?m.Poster:'https://via.placeholder.com/300x450?text=No+Poster'}" class="w-full h-[280px] object-cover"><div class="p-3"><div class="font-bold text-sm truncate">${m.Title}</div><div class="text-xs opacity-60">${m.Year}</div><div class="mt-2 flex justify-between items-center"><button onclick="event.stopPropagation();toggleFav('${m.imdbID}','${m.Title}','${m.Poster}','${m.Year}')" class="bg-white/10 px-3 py-1 rounded-full text-[11px]">🤍 Save</button><span class="text-[10px] bg-red-600/20 text-red-400 px-2 py-1 rounded-full">▶ Watch Trailer</span></div></div></div>`).join('');}
+async function openMovie(id){document.getElementById('modal').classList.remove('hidden');document.getElementById('trailerBox').innerHTML='Loading trailer...';let r=await fetch(`https://www.omdbapi.com/?apikey=${APIKEY}&i=${id}&plot=full`);let m=await r.json();document.getElementById('mTitle').innerText=m.Title;document.getElementById('mMeta').innerText=`${m.Year} • ${m.Rated} • ${m.Runtime} • ⭐ ${m.imdbRating} • ${m.Genre}`;document.getElementById('mPlot').innerText=m.Plot;
+ let ytQuery=encodeURIComponent(m.Title+' official trailer');document.getElementById('trailerBox').innerHTML=`<iframe class="w-full h-full" src="https://www.youtube.com/embed?listType=search&list=${ytQuery}" frameborder="0" allowfullscreen></iframe>`;
+ document.getElementById('netflix').href=`https://www.netflix.com/search?q=${encodeURIComponent(m.Title)}`;
+ document.getElementById('prime').href=`https://www.primevideo.com/search/ref=atv_sr_sug?phrase=${encodeURIComponent(m.Title)}`;
+ document.getElementById('yt').href=`https://www.youtube.com/results?search_query=${ytQuery}`;
 }
-
-function cardHTML(m, isFavObj=false){
-  const id = isFavObj ? m.imdbID : m.imdbID;
-  const title = m.Title; const year = m.Year;
-  const poster = m.Poster!=='N/A' ? m.Poster : 'https://via.placeholder.com/300x450?text=No+Image';
-  const isFav = favorites.some(f=>f.imdbID===id);
-  return `<div class="card bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 cursor-pointer" onclick="openModal('${id}')">
-  <img src="${poster}" class="w-full h-72 object-cover"/>
-  <div class="p-3"><h3 class="font-semibold truncate">${title}</h3><p class="text-xs text-zinc-500">${year}</p>
-  <button onclick="event.stopPropagation();toggleFav('${id}','${title.replace(/'/g,"\\'")}','${year}','${poster}')" class="mt-2 text-xs px-3 py-1 rounded-full ${isFav?'bg-red-600':'bg-zinc-800'}">${isFav?'❤️ Saved':'🤍 Save'}</button>
-  </div></div>`;
-}
-
-function toggleFav(id,title,year,poster){
-  const idx = favorites.findIndex(f=>f.imdbID===id);
-  if(idx>-1) favorites.splice(idx,1); else favorites.push({imdbID:id,Title:title,Year:year,Poster:poster});
-  updateFavCount(); searchMovies(input.value.trim(), document.body.dataset.mode==='fav');
-  if(document.body.dataset.mode!=='fav'){searchMovies(input.value.trim());}
-}
-
-async function openModal(id){
-  const res = await fetch(`https://www.omdbapi.com/?i=${id}&plot=full&apikey=${API_KEY}`);
-  const d = await res.json();
-  document.getElementById('modalContent').innerHTML = `
-  <div class="flex gap-4"><img src="${d.Poster!=='N/A'?d.Poster:'https://via.placeholder.com/300x450'}" class="w-32 rounded-xl"/>
-  <div><h2 class="text-xl font-bold">${d.Title}</h2><p class="text-sm text-zinc-400">${d.Year} • ${d.Runtime} • ${d.imdbRating}⭐</p><p class="text-sm mt-2 text-zinc-300">${d.Plot}</p><p class="text-xs mt-2 text-zinc-500">${d.Genre}</p></div></div>`;
-  document.getElementById('modal').classList.remove('hidden');
-}
-function closeModal(){document.getElementById('modal').classList.add('hidden');}
-
-document.getElementById('searchBtn').onclick=()=>searchMovies(input.value.trim());
-input.onkeydown=e=>{if(e.key==='Enter')searchMovies(input.value.trim())};
-document.getElementById('favBtn').onclick=()=>{
-  const isFavMode = document.body.dataset.mode==='fav';
-  document.body.dataset.mode = isFavMode?'search':'fav';
-  document.getElementById('favBtn').textContent = isFavMode ? `❤️ Favorites (${favorites.length})` : '🔍 Search';
-  if(isFavMode) searchMovies(input.value.trim()); else searchMovies('', true);
-};
-searchMovies('Avengers');
-</script>
-</body>
-</html>
+function closeModal(){document.getElementById('modal').classList.add('hidden');document.getElementById('trailerBox').innerHTML='';}
+function toggleFav(id,title,poster,year){let idx=favs.findIndex(f=>f.imdbID===id);if(idx>-1)favs.splice(idx,1);else favs.push({imdbID:id,Title:title,Poster:poster,Year:year});updateFav();alert(idx>-1?'Removed from favorites':'Added to favorites ❤️');}
+function showFav(){if(!favs.length){alert('No favorites yet');return;}render(favs);}
+updateFav(); search();
+</script></body></html>
