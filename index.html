@@ -1,25 +1,54 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MovieFlix v3</title><script src="https://cdn.tailwindcss.com"></script><style>.glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}</style></head>
-<body class="bg-black text-white min-h-screen">
-<div class="max-w-6xl mx-auto p-4">
-<div class="flex justify-between items-center"><b class="text-2xl"><span class="text-red-600">Movie</span>Flix <span class="bg-red-600 text-[10px] px-2 py-0.5 rounded-full ml-1">v3 TRAILERS WORKING</span></b><span class="bg-white/10 px-4 py-2 rounded-full text-xs">❤️ Working</span></div>
-<h1 class="text-center text-4xl font-extrabold mt-8">Find your next <span class="text-red-600">binge</span></h1>
-<div class="flex gap-2 max-w-xl mx-auto mt-6"><input id="q" placeholder="Search Avengers, Batman, Spider Man..." class="flex-1 bg-zinc-900 rounded-full px-5 py-3 text-sm outline-none" oninput="search()" onkeydown="if(event.key==='Enter')search()"><button onclick="search()" class="bg-red-600 px-6 rounded-full font-bold">Search</button></div>
-<div id="grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"></div>
-<div id="modal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4"><div class="bg-zinc-900 rounded-2xl max-w-3xl w-full overflow-hidden"><div id="trailer" class="aspect-video bg-black"></div><div class="p-5"><div id="t" class="font-bold text-xl"></div><div id="p" class="text-sm opacity-70 mt-2"></div><div class="flex gap-2 mt-4"><a id="yt" target="_blank" class="bg-white text-black px-4 py-2 rounded-full text-xs font-bold">▶ YouTube</a><button onclick="document.getElementById('modal').classList.add('hidden');document.getElementById('trailer').innerHTML=''" class="bg-white/10 px-4 py-2 rounded-full text-xs">Close</button></div></div></div></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieFlix - 10,000 Movies</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#141414;color:#fff;font-family:Arial}header{background:#000;padding:15px 5%;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:99}header h1{color:#e50914}input{padding:10px 20px;width:60%;border-radius:25px;border:none;outline:none}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:15px;padding:20px 5%}.card{cursor:pointer;transition:.3s;background:#222;border-radius:8px;overflow:hidden}.card:hover{transform:scale(1.05)}.card img{width:100%;height:220px;object-fit:cover}.card h3{padding:8px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;align-items:center;justify-content:center}.modal.active{display:flex}.box{background:#181818;padding:20px;border-radius:10px;width:90%;max-width:800px;max-height:90vh;overflow:auto}iframe{width:100%;height:350px;border:none;margin:10px 0}button{background:#e50914;color:#fff;border:none;padding:8px 18px;border-radius:20px;cursor:pointer;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>🎬 MovieFlix</h1>
+<input id="search" placeholder="Search Avengers, Ben 10, Stranger Things, RRR...">
+</header>
+<div id="movies" class="grid"></div>
+<div id="modal" class="modal" onclick="this.classList.remove('active')">
+<div class="box" onclick="event.stopPropagation()">
+<h2 id="mTitle"></h2>
+<p id="mDesc"></p>
+<iframe id="trailer"></iframe>
+<button onclick="modal.classList.remove('active')">Close</button>
+</div>
 </div>
 <script>
-const movies=[
-{Title:"Avengers Endgame",Year:"2019",Poster:"https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzQ2NzQ2NzM@._V1_SX300.jpg",Plot:"After Thanos snap, Avengers assemble for final battle.",YT:"TcMBFSGVi1c"},
-{Title:"Avengers Infinity War",Year:"2018",Poster:"https://m.media-amazon.com/images/M/MV5BMjMxNjY2MDU1OV5BMl5BanBnXkFtZTgwNzY1MTUwNTM@._V1_SX300.jpg",Plot:"Avengers vs Thanos – infinity stones.",YT:"6ZfuNTqbHE8"},
-{Title:"Ben 10 Alien Swarm",Year:"2009",Poster:"https://m.media-amazon.com/images/M/MV5BMjE2ODg0NjM3OF5BMl5BanBnXkFtZTcwODc2NjgzMg@@._V1_SX300.jpg",Plot:"Ben 10 faces alien swarm.",YT:"tJ__u5vA-2Y"},
-{Title:"The Batman",Year:"2022",Poster:"https://m.media-amazon.com/images/M/MV5BMDdmMTBiNTYtMDIzNi00NGVlLWIzMDYtZTk3MTQ3NGQxZGEwXkEyXkFqcGdeQXVyMzMwOTU5MDk@._V1_SX300.jpg",Plot:"Batman investigates corruption in Gotham.",YT:"mqqft2x_Aa4"},
-{Title:"Spider-Man No Way Home",Year:"2021",Poster:"https://m.media-amazon.com/images/M/MV5BZWMyYzFjYTYtNTRjYi00OGExLWE2YzgtOGRmYjAxZTU3NzBiXkEyXkFqcGdeQXVyMzQ0MzA0NTM@._V1_SX300.jpg",Plot:"Multiverse opens for Spider-Man.",YT:"JfVOs4VSpmA"},
-{Title:"Inception",Year:"2010",Poster:"https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",Plot:"Dream heist thriller by Nolan.",YT:"YoHD9XEInc0"},
-{Title:"Interstellar",Year:"2014",Poster:"https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg",Plot:"Space journey to save humanity.",YT:"zSWdZVtXT7E"},
-{Title:"KGF Chapter 2",Year:"2022",Poster:"https://m.media-amazon.com/images/M/MV5BOGM2MzI1ZTMtMWI2My00ZDYyLTk0YWItNWE5N2I5M2Y5ZWIxXkEyXkFqcGdeQXVyMTUzOTcyODA5._V1_SX300.jpg",Plot:"Rocky vs Adheera.",YT:"JKa05lQ4Ejo"},
-];
-function render(list){document.getElementById('grid').innerHTML=list.map((m,i)=>`<div onclick="openM(${i})" class="glass rounded-2xl overflow-hidden cursor-pointer hover:scale-105 transition"><img src="${m.Poster}" class="w-full h-[280px] object-cover"><div class="p-3"><div class="font-bold text-sm truncate">${m.Title}</div><div class="text-xs opacity-60">${m.Year}</div><div class="mt-2 text-[10px] bg-red-600 px-2 py-1 rounded-full inline-block">▶ Watch Trailer</div></div></div>`).join('');}
-function search(){let q=document.getElementById('q').value.toLowerCase();let f=movies.filter(m=>m.Title.toLowerCase().includes(q));render(f.length?f:movies);}
-function openM(i){let m=movies[i];document.getElementById('modal').classList.remove('hidden');document.getElementById('t').innerText=m.Title;document.getElementById('p').innerText=m.Plot;document.getElementById('trailer').innerHTML=`<iframe class="w-full h-full" src="https://www.youtube.com/embed/${m.YT}?autoplay=1" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>`;document.getElementById('yt').href=`https://www.youtube.com/watch?v=${m.YT}`;}
-render(movies);
-</script></body></html>
+const API_KEY='cf50784147689016264077d7f18a3dbc';
+const IMG='https://image.tmdb.org/t/p/w500';
+const moviesEl=document.getElementById('movies');
+async function searchMovies(q){
+ let url=q?`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${q}`:`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`;
+ let res=await fetch(url); let data=await res.json();
+ showMovies(data.results);
+}
+function showMovies(list){
+ moviesEl.innerHTML='';
+ list.forEach(m=>{
+  if(!m.poster_path) return;
+  moviesEl.innerHTML+=`<div class="card" onclick="openMovie(${m.id})"><img src="${IMG+m.poster_path}"><h3>${m.title}</h3></div>`;
+ });
+}
+async function openMovie(id){
+ let res=await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&append_to_response=videos`);
+ let m=await res.json();
+ document.getElementById('mTitle').innerText=m.title;
+ document.getElementById('mDesc').innerText=m.overview;
+ let vid=m.videos.results.find(v=>v.type==='Trailer')||m.videos.results[0];
+ document.getElementById('trailer').src=vid?`https://www.youtube.com/embed/${vid.key}`:'';
+ document.getElementById('modal').classList.add('active');
+}
+document.getElementById('search').addEventListener('input',e=>searchMovies(e.target.value));
+searchMovies('');
+</script>
+</body>
+</html>
